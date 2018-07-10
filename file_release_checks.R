@@ -9,10 +9,17 @@ library(lubridate)
 library(haven)
 setwd("N:/ORP_accountability/projects/2018_student_level_file")
 
-read = F
+student_level = F
 
-# Data
-if(read == T) {
+# Student level
+if(student_level == T) {
+  # Data
   jw = read_dta("state_student_level_2018_JW_final_07092018.dta")
   ap = read_csv("2018_student_level_file.csv")  
+  
+  # Checks
+  check = anti_join(jw, ap, by = c("id" = "state_student_id", "subject"))
+  
+  # Specific cases 
+  
 }

@@ -11,7 +11,8 @@ el_hs <- read_csv("N:/ORP_accountability/projects/2018_student_level_file/el_rec
     transmute(unique_student_id = student_key,
         el = if_else(isel == 1, "Y", "N"),
         el_arrived_year_1 = if_else(ELRECENTLYARRIVEDYEARONE == 1, "Y", "N"),
-        el_arrived_year_2 = if_else(ELRECENTLYARRIVEDYEARTWO == 1, "Y", "N")
+        el_arrived_year_2 = if_else(ELRECENTLYARRIVEDYEARTWO == 1, "Y", "N"),
+        el
     ) %>%
     distinct()
 
@@ -20,7 +21,7 @@ spring_cdf <- read_csv("N:/ORP_accountability/data/2018_cdf/2018_spring_cdf.csv"
         test = "EOC",
         semester = "Spring"
     ) %>%
-    select(-el, -el_arrived_year_1, -el_arrived_year_2) %>%
+    select(-el, -el_arrived_year_1, -el_arrived_year_2, -el_t1234) %>%
     left_join(el_hs, by = "unique_student_id") %>%
     mutate_at(c("el", "el_arrived_year_1", "el_arrived_year_2"), ~ if_else(is.na(.), "N", .))
 
@@ -28,15 +29,17 @@ el_38 <- read_csv("N:/ORP_accountability/data/2018_tdoe_provided_files/EL status
     transmute(unique_student_id = `Student Key`,
         el = if_else(`IS EL` == 1, "Y", "N"),
         el_arrived_year_1 = if_else(`Recently Arrived Year 1` == 1, "Y", "N"),
-        el_arrived_year_2 = if_else(`Recently Arrived Year 2` == 1, "Y", "N")
+        el_arrived_year_2 = if_else(`Recently Arrived Year 2` == 1, "Y", "N"),
+        el_t1234 = `T1T2  (T1T4)`
     ) %>%
     distinct()
 
 cdf_38 <- read_csv("N:/ORP_accountability/data/2018_cdf/2018_3_8_cdf.csv") %>%
-    select(-el, -el_arrived_year_1, -el_arrived_year_2) %>%
+    select(-el, -el_arrived_year_1, -el_arrived_year_2, -el_t1234) %>%
     left_join(el_38, by = "unique_student_id") %>%
     mutate_at(c("el", "el_arrived_year_1", "el_arrived_year_2"), ~ if_else(is.na(.), "N", .)) %>%
     mutate(
+        el_t1234 = ifelse(is.na(el_t1234), 0, el_t1234),
         test = "TNReady",
         semester = "Spring",
         teacher_of_record_tln = as.integer(teacher_of_record_tln)
@@ -204,9 +207,17 @@ dedup <- student_level %>%
 # Valid test if there is a proficiency level
     mutate(valid_test = as.numeric(!is.na(performance_level)))
 
+# Output file
 output <- dedup %>%
     filter(!is.na(state_student_id)) %>%
     filter(!(original_subject == "Social Studies" | (original_subject == "Science" & grade %in% c("3", "4")))) %>%
+    select(-system_name, -school_name) %>%
+  # Crosswalk school names
+  left_join(readxl::read_excel("N:/ORP_accountability/data/2018_final_accountability_files/2017-18_E EDFacts School Master FIle_5-3-18.xls", sheet = 2) %>% 
+              transmute(system = as.double(`DG 4 LEA ID (State)`), school = as.double(`DG 5 School ID (State)`),
+                        system_name = `EXTRA ITEM - LEA Name`, school_name = `DG 7 School Name`),
+            by = c("system", "school")) %>% 
+  # Keep and order variables
     select(system, system_name, school, school_name, test, original_subject, subject, semester,
         original_performance_level, performance_level, scale_score, enrolled, tested, valid_test,
         state_student_id, last_name, first_name, grade, race, bhn_group, teacher_of_record_tln,
@@ -214,6 +225,5 @@ output <- dedup %>%
         enrolled_50_pct_district, enrolled_50_pct_school, homebound, absent, refused_to_test, residential_facility) %>%
     mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
     arrange(system, school, state_student_id)
-# Crosswalk school names
 
 write_csv(output, "N:/ORP_accountability/projects/2018_student_level_file/2018_student_level_file.csv", na = "")
