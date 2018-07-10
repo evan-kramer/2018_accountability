@@ -24,11 +24,11 @@ spring_cdf <- read_csv("N:/ORP_accountability/data/2018_cdf/2018_spring_cdf.csv"
     left_join(el_hs, by = "unique_student_id") %>%
     mutate_at(c("el", "el_arrived_year_1", "el_arrived_year_2"), ~ if_else(is.na(.), "N", .))
 
-el_38 <- readxl::read_excel("N:/ORP_accountability/projects/2018_student_level_file/el_recently_arrived_3_8.xlsx") %>%
-    transmute(unique_student_id = student_key,
-        el = if_else(isel == 1, "Y", "N"),
-        el_arrived_year_1 = if_else(ELRECENTLYARRIVEDYEARONE == 1, "Y", "N"),
-        el_arrived_year_2 = if_else(ELRECENTLYARRIVEDYEARTWO == 1, "Y", "N")
+el_38 <- read_csv("N:/ORP_accountability/data/2018_tdoe_provided_files/EL status and variables 2018.csv") %>%
+    transmute(unique_student_id = `Student Key`,
+        el = if_else(`IS EL` == 1, "Y", "N"),
+        el_arrived_year_1 = if_else(`Recently Arrived Year 1` == 1, "Y", "N"),
+        el_arrived_year_2 = if_else(`Recently Arrived Year 2` == 1, "Y", "N")
     ) %>%
     distinct()
 
@@ -214,5 +214,6 @@ output <- dedup %>%
         enrolled_50_pct_district, enrolled_50_pct_school, homebound, absent, refused_to_test, residential_facility) %>%
     mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
     arrange(system, school, state_student_id)
+# Crosswalk school names
 
 write_csv(output, "N:/ORP_accountability/projects/2018_student_level_file/2018_student_level_file.csv", na = "")
