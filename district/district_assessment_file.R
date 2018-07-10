@@ -1,4 +1,3 @@
-library(acct)
 library(tidyverse)
 
 student_level <- read_csv("N:/ORP_accountability/projects/2018_student_level_file/2018_student_level_file.csv",
@@ -52,17 +51,16 @@ for (s in c("All", "Asian", "Black", "Hispanic", "Hawaiian", "Native", "White", 
         summarise_at(c("enrolled", "tested", "valid_test", "n_below", "n_approaching", "n_on_track", "n_mastered"), sum, na.rm = TRUE) %>%
         mutate(subgroup = s) %>%
         bind_rows(collapse, .)
-
 }
 
 assessment_2018 <- collapse %>%
     rename(valid_tests = valid_test, subject = original_subject) %>%
     mutate(grade = if_else(grade == 0, "Missing Grade", as.character(grade)),
-        pct_approaching = if_else(valid_tests != 0, round5(100 * n_approaching/valid_tests, 1), NA_real_),
-        pct_on_track = if_else(valid_tests != 0, round5(100 * n_on_track/valid_tests, 1), NA_real_),
-        pct_mastered = if_else(valid_tests != 0, round5(100 * n_mastered/valid_tests, 1), NA_real_),
-        pct_below = if_else(valid_tests != 0, round5(100 - pct_approaching - pct_on_track - pct_mastered, 1), NA_real_),
-        pct_on_mastered = if_else(valid_tests != 0, round5(100 * (n_on_track + n_mastered)/valid_tests, 1), NA_real_),
+        pct_approaching = if_else(valid_tests != 0, round(1000 * n_approaching/(valid_tests*10), 1), NA_real_),
+        pct_on_track = if_else(valid_tests != 0, round(1000 * n_on_track/(valid_tests*10), 2), NA_real_),
+        pct_mastered = if_else(valid_tests != 0, round(1000 * n_mastered/(valid_tests*10), 2), NA_real_),
+        pct_below = if_else(valid_tests != 0, round(100 - pct_approaching - pct_on_track - pct_mastered, 1), NA_real_),
+        pct_on_mastered = if_else(valid_tests != 0, round(1000 * (n_on_track + n_mastered)/(valid_tests*10), 1), NA_real_),
     # Fix % B/A/O if there are no n_B/A/O,
         pct_approaching = if_else(pct_below != 0 & n_below == 0, 100 - pct_on_track - pct_mastered, pct_approaching),
         pct_below = if_else(pct_below != 0 & n_below == 0, 0, pct_below),
@@ -85,8 +83,10 @@ assessment_2018 <- collapse %>%
             subgroup == "Super" ~ "Super Subgroup",
             subgroup == "SWD" ~ "Students with Disabilities",
             TRUE ~ subgroup
-        )
-    ) %>%
+    )) %>%
+  # Fix rounding issues
+    mutate_at(vars(pct_approaching, pct_on_track, pct_mastered, pct_on_mastered), funs(round(., 1))) %>%
+  # Keep and order variables
     select(year, system, test, subject, grade, subgroup,
         enrolled, tested, valid_tests, n_below, n_approaching, n_on_track, n_mastered,
         pct_below, pct_approaching, pct_on_track, pct_mastered, pct_on_mastered)
