@@ -226,4 +226,4 @@ output <- dedup %>%
     mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
     arrange(system, school, state_student_id)
 
-write_csv(output, "N:/ORP_accountability/projects/2018_student_level_file/2018_student_level_file.csv", na = "")
+#write_csv(output, "N:/ORP_accountability/projects/2018_student_level_file/2018_student_level_file.csv", na = "")
