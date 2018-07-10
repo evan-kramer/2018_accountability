@@ -21,7 +21,7 @@ spring_cdf <- read_csv("N:/ORP_accountability/data/2018_cdf/2018_spring_cdf.csv"
         test = "EOC",
         semester = "Spring"
     ) %>%
-    select(-el, -el_arrived_year_1, -el_arrived_year_2, -el_t1234) %>%
+    select(-el, -el_arrived_year_1, -el_arrived_year_2) %>%
     left_join(el_hs, by = "unique_student_id") %>%
     mutate_at(c("el", "el_arrived_year_1", "el_arrived_year_2"), ~ if_else(is.na(.), "N", .))
 
