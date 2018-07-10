@@ -60,4 +60,7 @@ cdf <- read_fwf(file = "2017-2018 TN 2018 Spring 3-8 CDF Final Scores - 20180709
     )
 )
 
-write_csv(cdf, path = "N:/ORP_accountability/data/2018_cdf/2018_3_8_cdf.csv")
+# Output file
+#write_csv(cdf, path = "N:/ORP_accountability/data/2018_cdf/2018_3_8_cdf.csv")  
+
+rm(list = ls())
