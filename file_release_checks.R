@@ -7,16 +7,16 @@ options(java.parameters = "-Xmx16G")
 library(tidyverse)
 library(lubridate)
 library(haven)
-setwd("N:/ORP_accountability/projects/2018_student_level_file")
 
 stu = F
-sta = F
+sta = T
 dis = F
 sch = F
 
 # Student level
 if(stu == T) {
   # Data
+  setwd("N:/ORP_accountability/projects/2018_student_level_file")
   jw = read_dta("state_student_level_2018_JW_final_07092018.dta")
   ap = read_csv("2018_student_level_file.csv", col_types = "iciccccccciiiidcciciiiiiiiicciiii")
   el = read_csv("N:/ORP_accountability/data/2018_tdoe_provided_files/EL status and variables 2018.csv")
@@ -46,12 +46,53 @@ if(stu == T) {
 
 # State level
 if(sta == T) {
+  # Data
+  setwd("N:/ORP_accountability/data/2018_final_accountability_files")
+  jw = read_csv("assessment_file_2018_JW_state_07092018.csv") %>% 
+    mutate(subgroup = ifelse(str_detect(subgroup, "Learner") == F, subgroup, case_when(
+      subgroup == "English Language Learners" ~ "English Learners",
+      subgroup == "English Language Learners with T1/T2/T3/T4" ~ "English Learners with Transitional 1-4",
+      subgroup == "Former English Language Learners T1/T2/T3/T4" ~ "English Learner Transitional 1-4",
+      subgroup == "Non-English Language Learners" ~ "Non-English Learners",
+      subgroup == "Non-English Language Learners with T1/T2/T3/T4" ~ "Non-English Learners/Transitional 1-4",
+      subgroup == "English Language Learners with T1/T2" ~ "English Learners with Transitional 1-2",
+      subgroup == "Former English Language Learners T1/T2" ~ "English Learner Transitional 1-2",
+      subgroup == "Non-English Language Learners with T1/T2" ~ "Non-English Learners/Transitional 1-2"
+    )),
+    test = ifelse(test %in% c("MSAA", "ALT_SCI"), "MSAA/Alt-Science", test)) %>% 
+    rename(n_below = n_below_bsc, n_approaching = n_approach_bsc, n_on_track = n_ontrack_prof, n_mastered = n_mastered_adv,
+           pct_below = pct_below_bsc, pct_approaching = pct_approach_bsc, pct_on_track = pct_ontrack_prof, pct_mastered = pct_mastered_adv, pct_on_mastered = pct_ontrack_prof_adv)
+  ap = read_csv("state_assessment_file.csv")
   
+  # Checks: enrolled, tested, valid_tests, performance levels/percentages
+  check = full_join(select(jw, year, system, test, subject, grade, subgroup, enrolled, tested, valid_tests, starts_with("n_"), starts_with("pct_")),
+                    select(ap, year, system, test, subject, grade, subgroup, enrolled, tested, valid_tests, starts_with("n_"), starts_with("pct_")),
+                    by = c("year", "test", "system", "grade", "subgroup", "subject")) %>% 
+    # select(year:subgroup, starts_with("enrolled."), starts_with("tested."), starts_with("valid_tests.")) %>%
+    # filter(enrolled.x != enrolled.y | (is.na(enrolled.x) & !is.na(enrolled.y)) | (is.na(enrolled.y) & !is.na(enrolled.x))) %>%
+    # filter(tested.x != tested.y | (is.na(tested.x) & !is.na(tested.y)) | (is.na(tested.y) & !is.na(tested.x))) %>%
+    # filter(valid_tests.x != valid_tests.y | (is.na(valid_tests.x) & !is.na(valid_tests.y)) | (is.na(valid_tests.y) & !is.na(valid_tests.x))) %>%
+    # filter(!is.na(subject) & subgroup != "Non-English Learners" & subject != "Science" & !grade %in% c("3", "4") & enrolled.x != 0)
+    
+    select(year:subgroup, starts_with("valid_tests"), starts_with("n_below"), starts_with("pct_below")) %>%
+    filter(abs(pct_below.x - pct_below.y) >= 0.1 | (is.na(pct_below.x) & !is.na(pct_below.y)) | (is.na(pct_below.y) & !is.na(pct_below.x))) %>%
+    # select(year:subgroup, starts_with("valid_tests"), starts_with("n_approaching"), starts_with("pct_approaching")) %>%
+    # filter(abs(pct_approaching.x - pct_approaching.y) >= 0.1 | (is.na(pct_approaching.x) & !is.na(pct_approaching.y)) | (is.na(pct_approaching.y) & !is.na(pct_approaching.x))) %>%
+    # select(year:subgroup, starts_with("valid_tests"), starts_with("n_approaching"), starts_with("pct_approaching")) %>%
+    # select(year:subgroup, starts_with("valid_tests"), starts_with("n_on_track"), starts_with("pct_on_track")) %>%
+    # filter(abs(pct_on_track.x - pct_on_track.y) >= 0.1 | (is.na(pct_on_track.x) & !is.na(pct_on_track.y)) | (is.na(pct_on_track.y) & !is.na(pct_on_track.x))) %>%
+    # select(year:subgroup, starts_with("valid_tests"), starts_with("n_mastered"), starts_with("pct_mastered")) %>%
+    # filter(abs(pct_mastered.x - pct_mastered.y) >= 0.1 | (is.na(pct_mastered.x) & !is.na(pct_mastered.y)) | (is.na(pct_mastered.y) & !is.na(pct_mastered.x))) %>%
+    # select(year:subgroup, starts_with("valid_tests"), starts_with("n_on_track"), starts_with("n_mastered"), starts_with("pct_on_mastered")) %>%
+    # filter(abs(pct_on_mastered.x - pct_on_mastered.y) >= 0.1 | (is.na(pct_on_mastered.x) & !is.na(pct_on_mastered.y)) | (is.na(pct_on_mastered.y) & !is.na(pct_on_mastered.x))) %>%
+    filter(!is.na(subject) & subgroup != "Non-English Learners" & valid_tests.x != 0 & subject != "Science" & !grade %in% c("3", "4"))
 }
+
 # District level
 if(dis == T) {
   
 }
+
 # School level
 if(sch == T) {
   
