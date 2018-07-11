@@ -1,6 +1,7 @@
 # 2018 Grade 2 Assessment
 # Evan Kramer
 # 7/10/2018
+
 library(tidyverse)
 
 cdf <- read_csv("N:/ORP_accountability/data/2018_cdf/2018_grade_2_cdf.csv") %>%
@@ -80,4 +81,4 @@ output <- student_level %>%
     mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
     arrange(system, school, state_student_id)
 
-write_csv(output, "N:/ORP_accountability/projects/2018_student_level_file/2018_grade_2_student_level_file.csv", na = "")
+write_csv(output, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_student_level_file.csv", na = "")

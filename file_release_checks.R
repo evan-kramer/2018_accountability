@@ -11,7 +11,8 @@ library(haven)
 stu = F
 sta = F
 dis = F
-sch = T
+sch = F
+gr2 = T 
 
 # Student level
 if(stu == T) {
@@ -177,10 +178,43 @@ if(sch == T) {
     # filter(abs(pct_on_track.x - pct_on_track.y) >= 0.1 | (is.na(pct_on_track.x) & !is.na(pct_on_track.y)) | (is.na(pct_on_track.y) & !is.na(pct_on_track.x))) %>%
     # select(year:subgroup, starts_with("valid_tests"), starts_with("n_mastered"), starts_with("pct_mastered")) %>%
     # filter(abs(pct_mastered.x - pct_mastered.y) >= 0.1 | (is.na(pct_mastered.x) & !is.na(pct_mastered.y)) | (is.na(pct_mastered.y) & !is.na(pct_mastered.x))) %>%
-    select(year:subgroup, starts_with("valid_tests"), starts_with("n_on_track"), starts_with("n_mastered"), starts_with("pct_on_mastered")) %>%
-    filter(abs(pct_on_mastered.x - pct_on_mastered.y) >= 0.1 | (is.na(pct_on_mastered.x) & !is.na(pct_on_mastered.y)) | (is.na(pct_on_mastered.y) & !is.na(pct_on_mastered.x))) %>%
+    # select(year:subgroup, starts_with("valid_tests"), starts_with("n_on_track"), starts_with("n_mastered"), starts_with("pct_on_mastered")) %>%
+    # filter(abs(pct_on_mastered.x - pct_on_mastered.y) >= 0.1 | (is.na(pct_on_mastered.x) & !is.na(pct_on_mastered.y)) | (is.na(pct_on_mastered.y) & !is.na(pct_on_mastered.x))) %>%
     filter(!is.na(subject) & subgroup != "Non-English Learners" & valid_tests.x != 0 & subject != "Science" & !grade %in% c("3", "4"))
     
+  # Specific cases
+  filter(ap, year == 2016 & system == 130 & school == 93 & test == "EOC" & grade == "All Grades" & 
+           subject == "Algebra II" & subgroup == "Non-Economically Disadvantaged") %>% 
+    select(valid_tests, starts_with("n_"))
+}
+
+# Grade 2
+if(gr2 == T) {
+  # Data
+  setwd("N:/ORP_accountability/projects/2018_grade_2_assessment")
+  
+  # Figure out column names and types
+  jw = read_dta("state_student_level_grade2_2018_JW_final_07112018.dta") %>% 
+    transmute(state_student_id = id, system, school, grade, subject = content_area_code, enrolled, tested, valid_test, 
+              performance_level, bhn_group, special_ed, economically_disadvantaged, el = ell, el_t1234 = ell_t1t4,
+              enrolled_50_pct_district, enrolled_50_pct_school, 
+              race = ifelse(race %in% c("Asian", "White", "Black or African American"), race, case_when(
+                race == "American Indian or Alaskan Native" ~ "American Indian/Alaska Native",
+                race == "Hispanic" ~ "Hispanic/Latino",
+                race == "Unidentified" ~ "Unknown",
+                race == "Native Hawaiian or Pacific Islander" ~ "Native Hawaiian/Pac. Islander"
+              )))
+  ap = read_csv("2018_grade_2_student_level_file.csv")
+  
+  # Checks: enrolled, tested, valid_tests, performance levels/percentages
+  check = full_join(jw, ap, by = c("state_student_id", "subject")) %>% 
+    select(state_student_id, subject, starts_with("race"), starts_with("bhn"), starts_with("special"), starts_with("econ"), starts_with("el")) %>% 
+    filter(race.x != race.y | (is.na(race.x) & !is.na(race.y)) | (is.na(race.y) & !is.na(race.x)) | 
+             bhn_group.x != bhn_group.y | (is.na(bhn_group.x) & !is.na(bhn_group.y)) | (is.na(bhn_group.y) & !is.na(bhn_group.x)) | 
+             special_ed.x != special_ed.y | (is.na(special_ed.x) & !is.na(special_ed.y)) | (is.na(special_ed.y) & !is.na(special_ed.x)) |
+             #el.x != el.y | (is.na(el.x) & !is.na(el.y)) | (is.na(el.y) & !is.na(el.x)))
+             el_t1234.x != el_t1234.y | (is.na(el_t1234.x) & !is.na(el_t1234.y)) | (is.na(el_t1234.y) & !is.na(el_t1234.x)))
+  
   # Specific cases
   filter(ap, year == 2016 & system == 130 & school == 93 & test == "EOC" & grade == "All Grades" & 
            subject == "Algebra II" & subgroup == "Non-Economically Disadvantaged") %>% 
