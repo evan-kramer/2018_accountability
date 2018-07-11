@@ -13,6 +13,7 @@ sta = F
 dis = F
 sch = F
 gr2 = T 
+elp = F
 
 # Student level
 if(stu == T) {
@@ -211,9 +212,9 @@ if(gr2 == T) {
     select(state_student_id, subject, starts_with("race"), starts_with("bhn"), starts_with("special"), starts_with("econ"), starts_with("el")) %>% 
     filter(race.x != race.y | (is.na(race.x) & !is.na(race.y)) | (is.na(race.y) & !is.na(race.x)) | 
              bhn_group.x != bhn_group.y | (is.na(bhn_group.x) & !is.na(bhn_group.y)) | (is.na(bhn_group.y) & !is.na(bhn_group.x)) | 
-             special_ed.x != special_ed.y | (is.na(special_ed.x) & !is.na(special_ed.y)) | (is.na(special_ed.y) & !is.na(special_ed.x)) |
+             special_ed.x != special_ed.y | (is.na(special_ed.x) & !is.na(special_ed.y)) | (is.na(special_ed.y) & !is.na(special_ed.x)))# |
              #el.x != el.y | (is.na(el.x) & !is.na(el.y)) | (is.na(el.y) & !is.na(el.x)))
-             el_t1234.x != el_t1234.y | (is.na(el_t1234.x) & !is.na(el_t1234.y)) | (is.na(el_t1234.y) & !is.na(el_t1234.x)))
+             #el_t1234.x != el_t1234.y | (is.na(el_t1234.x) & !is.na(el_t1234.y)) | (is.na(el_t1234.y) & !is.na(el_t1234.x)))
   
   # Specific cases
   filter(ap, year == 2016 & system == 130 & school == 93 & test == "EOC" & grade == "All Grades" & 

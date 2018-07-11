@@ -72,13 +72,16 @@ student_level <- cdf %>%
     )
 
 output <- student_level %>%
-    filter(!is.na(state_student_id)) %>%
-    select(system, system_name, school, school_name, original_subject, subject,
-        original_performance_level, performance_level, scale_score, enrolled, tested, valid_test,
-        state_student_id, last_name, first_name, grade, race, bhn_group, teacher_of_record_tln,
-        functionally_delayed, special_ed, economically_disadvantaged, el, el_t1234, el_recently_arrived,
-        enrolled_50_pct_district, enrolled_50_pct_school, homebound, absent, refused_to_test, residential_facility) %>%
-    mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
-    arrange(system, school, state_student_id)
+  left_join(transmute(read_csv("N:/ORP_accountability/data/2018_tdoe_provided_files/cte_alt_adult_schools.csv"),
+                      system = as.numeric(DISTRICT_NUMBER), school = as.numeric(SCHOOL_NUMBER), 
+                      cte_alt_adult = 1L), by = c("system", "school")) %>%
+  filter(!is.na(state_student_id) & is.na(cte_alt_adult)) %>%
+  select(system, system_name, school, school_name, original_subject, subject,
+      original_performance_level, performance_level, scale_score, enrolled, tested, valid_test,
+      state_student_id, last_name, first_name, grade, race, bhn_group, teacher_of_record_tln,
+      functionally_delayed, special_ed, economically_disadvantaged, el, el_t1234, el_recently_arrived,
+      enrolled_50_pct_district, enrolled_50_pct_school, homebound, absent, refused_to_test, residential_facility) %>%
+  mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
+  arrange(system, school, state_student_id)
 
 write_csv(output, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_student_level_file.csv", na = "")

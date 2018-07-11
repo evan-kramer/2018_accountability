@@ -1,4 +1,7 @@
-library(acct)
+# 2018 File Release Checks
+# Evan Kramer
+# 7/11/2018
+
 library(janitor)
 library(tidyverse)
 
