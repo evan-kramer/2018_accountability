@@ -12,8 +12,8 @@ stu = F
 sta = F
 dis = F
 sch = F
-gr2 = T 
-elp = F
+gr2 = F 
+elp = T
 
 # Student level
 if(stu == T) {
@@ -193,8 +193,6 @@ if(sch == T) {
 if(gr2 == T) {
   # Data
   setwd("N:/ORP_accountability/projects/2018_grade_2_assessment")
-  
-  # Figure out column names and types
   jw = read_dta("state_student_level_grade2_2018_JW_final_07112018.dta") %>% 
     transmute(state_student_id = id, system, school, grade, subject = content_area_code, enrolled, tested, valid_test, 
               performance_level, bhn_group, special_ed, economically_disadvantaged, el = ell, el_t1234 = ell_t1t4,
@@ -220,4 +218,71 @@ if(gr2 == T) {
   filter(ap, year == 2016 & system == 130 & school == 93 & test == "EOC" & grade == "All Grades" & 
            subject == "Algebra II" & subgroup == "Non-Economically Disadvantaged") %>% 
     select(valid_tests, starts_with("n_"))
+}
+
+# ELPA
+if(elp == T) {
+  setwd("N:/ORP_accountability/data/2018_ELPA")
+  
+  # Student
+  # jw = read_dta("WIDA_student_level2018_wlagscores_07062018.dta") %>% 
+  #   select(student_id = unique_student_id, system, school, ends_with("performancelevel"), starts_with("performancelevel"),
+  #          valid_tests, bhn, ed, swd, el = ell, hispanic = Hispanic, black = Black, native = raceamericanindianalaskannative,
+  #          hawaiian_pi = racepacificislanderhawaiian, asian = Asian, white = White) %>% 
+  #   mutate_at(vars(native, hawaiian_pi), funs(as.numeric(. == "Y"))) %>% 
+  #   mutate_at(vars(ed, bhn, swd), funs(ifelse(is.na(.), 0, .)))
+  # ap = read_csv("wida_growth_standard_student_level.csv", col_types = "ddcdccccdddddddddddddddddddddddddddddddddd") %>% 
+  #   mutate_at(vars(bhn), funs(ifelse(is.na(.), 0, .)))
+  # 
+  # # Checks: performance
+  # check = full_join(rename(jw, prof_composite = performancelevelcomposite, prof_literacy = literacyperformancelevel),
+  #                   select(ap, student_id, system, school, bhn, ed, el, swd, black, hispanic, native, hawaiian_pi, asian, white, starts_with("prof_")),
+  #                   by = "student_id") %>% 
+  #   filter(
+  #     # system.x != system.y | (is.na(system.x) & !is.na(system.y)) | (is.na(system.y) & !is.na(system.x))
+  #     # school.x != school.y | (is.na(school.x) & !is.na(school.y)) | (is.na(school.y) & !is.na(school.x))
+  #     # bhn.x != bhn.y | (is.na(bhn.x) & !is.na(bhn.y)) | (is.na(bhn.y) & !is.na(bhn.x))
+  #     # ed.x != ed.y | (is.na(ed.x) & !is.na(ed.y)) | (is.na(ed.y) & !is.na(ed.x))
+  #     # el.x != el.y | (is.na(el.x) & !is.na(el.y)) | (is.na(el.y) & !is.na(el.x))
+  #     # swd.x != swd.y | (is.na(swd.x) & !is.na(swd.y)) | (is.na(swd.y) & !is.na(swd.x))
+  #     # prof_composite.x != prof_composite.y | (is.na(prof_composite.x) & !is.na(prof_composite.y)) | (is.na(prof_composite.y) & !is.na(prof_composite.x))
+  #     prof_literacy.x != prof_literacy.y | (is.na(prof_literacy.x) & !is.na(prof_literacy.y)) | (is.na(prof_literacy.y) & !is.na(prof_literacy.x))
+  #   )
+
+  # School
+  # jw = read_dta("school_level_elpa_JW_07062018.dta") %>% 
+  #     transmute(system = as.integer(system), school = as.integer(school),
+  #               subgroup = ifelse(subgroup  == "English Language Learners", "English Learners", subgroup),
+  #               subgroup = ifelse(subgroup == "Native Hawaiian or Pacific Islander", "Native Hawaiian or Other Pacific Islander", subgroup),
+  #               exit_denom = valid_tests,
+  #               n_exit = met_exit_criteriaNEW,
+  #               pct_exit = pct_met_exit_criteriaNEW,
+  #               growth_standard_denom = n_validtests_growth,
+  #               pct_met_growth_standard,
+  #               literacy_average = literacy_avg,
+  #               composite_average = composite_avg)
+  # ap = read_csv("wida_growth_standard_school.csv")
+  # check = full_join(jw, ap, by = c("system", "school", "subgroup")) %>% 
+  #   filter(composite_average.x != composite_average.y | (is.na(composite_average.x) & !is.na(composite_average.y)) | (is.na(composite_average.y) & !is.na(composite_average.x))) %>% 
+  #   select(system, school, subgroup, starts_with("composite_average"))
+  
+  # District
+  # jw = read_dta("system_level_elpa_JW_07062018.dta") %>% 
+  #   transmute(system = as.integer(system), 
+  #             subgroup = ifelse(subgroup  == "English Language Learners", "English Learners", subgroup),
+  #             subgroup = ifelse(subgroup == "Native Hawaiian or Pacific Islander", "Native Hawaiian or Other Pacific Islander", subgroup),
+  #             exit_denom = valid_tests,
+  #             n_exit = met_exit_criteriaNEW,
+  #             pct_exit = pct_met_exit_criteriaNEW,
+  #             growth_standard_denom = n_validtests_growth,
+  #             pct_met_growth_standard,
+  #             literacy_average = literacy_avg,
+  #             composite_average = composite_avg)
+  # ap = read_csv("wida_growth_standard_district.csv")
+  # check = full_join(jw, ap, by = c("system", "subgroup")) %>% 
+  #   # filter(composite_average.x != composite_average.y | (is.na(composite_average.x) & !is.na(composite_average.y)) | (is.na(composite_average.y) & !is.na(composite_average.x))) %>% 
+  #   filter(literacy_average.x != literacy_average.y | (is.na(literacy_average.x) & !is.na(literacy_average.y)) | (is.na(literacy_average.y) & !is.na(literacy_average.x))) %>%
+  #   select(system:subgroup, starts_with("literacy_average"), starts_with("composite_average"))
+  
+  # Specific cases
 }

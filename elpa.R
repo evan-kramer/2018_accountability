@@ -26,10 +26,13 @@ demographic <- read_delim("N:/Assessment_Data Returns/ACCESS for ELs and ALT/201
     transmute(student_id = student_key, bhn = pmax(black, hispanic, native), ed, swd, el = ell,
         hispanic, black, native, hawaiian_pi, asian, white)
 
-wida <- haven::read_dta("N:/Assessment_Data Returns/ACCESS for ELs and ALT/2017-18/WIDA/20180606_WIDA_AccessResults_SY2017-18_Whalen_v2.dta") %>%
+wida <- haven::read_dta("N:/Assessment_Data Returns/ACCESS for ELs and ALT/2017-18/WIDA/20180706_WIDA_AccessResults_SY2017-18_Whalen_v3.dta") %>%
     clean_names() %>%
     transmute(
         student_id = as.numeric(statestudentid),
+        first_name = studentfirstname,
+        middle_name = studentmiddlename,
+        last_name = studentlastname,
         system = as.integer(str_sub(districtnumber, 3, 5)),
         school = schoolnumber,
         scale_score_listening = listeningscalescore,
@@ -75,27 +78,27 @@ wida <- haven::read_dta("N:/Assessment_Data Returns/ACCESS for ELs and ALT/2017-
         ),
         growth_standard_2yr = case_when(
             is.na(prof_composite_16) ~ NA_real_,
-            prof_composite_16 <= 1.4 ~ round5(1.3 + prof_composite_16, 1),
-            prof_composite_16 <= 1.9 ~ round5(0.7 + prof_composite_16, 1),
-            prof_composite_16 <= 2.4 ~ round5(0.8 + prof_composite_16, 1),
-            prof_composite_16 <= 2.9 ~ round5(0.7 + prof_composite_16, 1),
-            prof_composite_16 <= 3.4 ~ round5(0.4 + prof_composite_16, 1),
-            prof_composite_16 <= 3.9 ~ round5(0.5 + prof_composite_16, 1),
-            prof_composite_16 <= 4.4 ~ round5(0.4 + prof_composite_16, 1)
+            prof_composite_16 <= 1.4 ~ round(1.3 + prof_composite_16, 1),
+            prof_composite_16 <= 1.9 ~ round(0.7 + prof_composite_16, 1),
+            prof_composite_16 <= 2.4 ~ round(0.8 + prof_composite_16, 1),
+            prof_composite_16 <= 2.9 ~ round(0.7 + prof_composite_16, 1),
+            prof_composite_16 <= 3.4 ~ round(0.4 + prof_composite_16, 1),
+            prof_composite_16 <= 3.9 ~ round(0.5 + prof_composite_16, 1),
+            prof_composite_16 <= 4.4 ~ round(0.4 + prof_composite_16, 1)
         ),
         growth_standard_2yr = case_when(
             is.na(growth_standard_2yr) ~ NA_real_,
-            growth_standard_2yr <= 1.4 ~ round5(1.3 + growth_standard_2yr, 1),
-            growth_standard_2yr <= 1.9 ~ round5(0.7 + growth_standard_2yr, 1),
-            growth_standard_2yr <= 2.4 ~ round5(0.8 + growth_standard_2yr, 1),
-            growth_standard_2yr <= 2.9 ~ round5(0.7 + growth_standard_2yr, 1),
-            growth_standard_2yr <= 3.4 ~ round5(0.4 + growth_standard_2yr, 1),
-            growth_standard_2yr <= 3.9 ~ round5(0.5 + growth_standard_2yr, 1),
-            growth_standard_2yr <= 4.4 ~ round5(0.4 + growth_standard_2yr, 1)
+            growth_standard_2yr <= 1.4 ~ round(1.3 + growth_standard_2yr, 1),
+            growth_standard_2yr <= 1.9 ~ round(0.7 + growth_standard_2yr, 1),
+            growth_standard_2yr <= 2.4 ~ round(0.8 + growth_standard_2yr, 1),
+            growth_standard_2yr <= 2.9 ~ round(0.7 + growth_standard_2yr, 1),
+            growth_standard_2yr <= 3.4 ~ round(0.4 + growth_standard_2yr, 1),
+            growth_standard_2yr <= 3.9 ~ round(0.5 + growth_standard_2yr, 1),
+            growth_standard_2yr <= 4.4 ~ round(0.4 + growth_standard_2yr, 1)
         ),
         met_growth_standard = case_when(
             growth_standard_denom == 0 ~ NA_integer_,
-            round5(prof_composite - prof_composite_17, 1) >= growth_standard_1yr | prof_composite >= growth_standard_2yr ~ 1L,
+            round(prof_composite - prof_composite_17, 1) >= growth_standard_1yr | prof_composite >= growth_standard_2yr ~ 1L,
             TRUE ~ 0L
         ),
         met_growth_standard = if_else(growth_standard_denom == 1L & exit == 1L, 1L, met_growth_standard)
@@ -105,7 +108,14 @@ wida <- haven::read_dta("N:/Assessment_Data Returns/ACCESS for ELs and ALT/2017-
     mutate_at(c("ed", "swd", "el", "hispanic", "black", "native", "hawaiian_pi", "asian", "white"), ~ if_else(is.na(.), 0L, as.integer(.)))
 
 wida %>%
+    left_join(transmute(readxl::read_excel("N:/ORP_accountability/data/2018_final_accountability_files/2017-18_E EDFacts School Master FIle_5-3-18.xls",
+                        sheet = 2),
+                        system = as.integer(`DG 4 LEA ID (State)`),
+                        system_name = `EXTRA ITEM - LEA Name`,
+                        school = as.numeric(`DG 5 School ID (State)`),
+                        school_name = `DG 7 School Name`), by = c("system", "school")) %>%
     select(-max_comp, -max_lit) %>%
+    select(student_id, system, system_name, school, school_name, everything()) %>% 
     write_csv("N:/ORP_accountability/data/2018_ELPA/wida_growth_standard_student_level.csv", na = "")
 
 growth_standard_school <- map_dfr(
@@ -132,21 +142,29 @@ growth_standard_school <- map_dfr(
             n_exit = sum(exit, na.rm = TRUE),
             growth_standard_denom = sum(growth_standard_denom, na.rm = TRUE),
             n_met_growth_standard = sum(met_growth_standard, na.rm = TRUE),
-            literacy_average = round5(mean(prof_literacy, na.rm = TRUE), 1),
-            composite_average = round5(mean(prof_composite, na.rm = TRUE), 1)
+            literacy_average = round(mean(prof_literacy, na.rm = TRUE) + 1e-9, 1),
+            composite_average = round(mean(prof_composite, na.rm = TRUE) + 1e-9, 1)
         ) %>%
         ungroup() %>%
         transmute(
             system, school, subgroup,
             exit_denom, n_exit,
-            pct_exit = if_else(exit_denom != 0, round5(100 * n_exit/exit_denom, 1), NA_real_),
+            pct_exit = if_else(exit_denom != 0, round(100 * n_exit/exit_denom+1e-9, 1), NA_real_),
             growth_standard_denom, n_met_growth_standard,
-            pct_met_growth_standard = if_else(growth_standard_denom != 0, round5(100 * n_met_growth_standard/growth_standard_denom, 1), NA_real_),
+            pct_met_growth_standard = if_else(growth_standard_denom != 0, round(100 * n_met_growth_standard/growth_standard_denom+1e-9, 1), NA_real_),
             literacy_average, composite_average
         )
     }
 ) %>%
-    arrange(system, school, subgroup)
+    left_join(transmute(readxl::read_excel("N:/ORP_accountability/data/2018_final_accountability_files/2017-18_E EDFacts School Master FIle_5-3-18.xls",
+                                           sheet = 2),
+                        system = as.integer(`DG 4 LEA ID (State)`),
+                        system_name = `EXTRA ITEM - LEA Name`,
+                        school = as.numeric(`DG 5 School ID (State)`),
+                        school_name = `DG 7 School Name`), by = c("system", "school")) %>%
+    select(system, system_name, school, school_name, everything()) %>% 
+    arrange(system, school, subgroup) 
+    
 
 write_csv(growth_standard_school, "N:/ORP_accountability/data/2018_ELPA/wida_growth_standard_school.csv", na = "")
 
@@ -174,20 +192,28 @@ growth_standard_district <- map_dfr(
             n_exit = sum(exit, na.rm = TRUE),
             growth_standard_denom = sum(growth_standard_denom, na.rm = TRUE),
             n_met_growth_standard = sum(met_growth_standard, na.rm = TRUE),
-            literacy_average = round5(mean(prof_literacy, na.rm = TRUE), 1),
-            composite_average = round5(mean(prof_composite, na.rm = TRUE), 1)
+            literacy_average = round(mean(prof_literacy, na.rm = TRUE) + 1e-9, 1),
+            composite_average = round(mean(prof_composite, na.rm = TRUE) + 1e-9, 1)
         ) %>%
         ungroup() %>%
         transmute(
             system, subgroup,
             exit_denom, n_exit,
-            pct_exit = if_else(exit_denom != 0, round5(100 * n_exit/exit_denom, 1), NA_real_),
+            pct_exit = if_else(exit_denom != 0, round(100 * n_exit/exit_denom+1e-9, 1), NA_real_),
             growth_standard_denom, n_met_growth_standard,
-            pct_met_growth_standard = if_else(growth_standard_denom != 0, round5(100 * n_met_growth_standard/growth_standard_denom, 1), NA_real_),
+            pct_met_growth_standard = if_else(growth_standard_denom != 0, round(100 * n_met_growth_standard/growth_standard_denom+1e-9, 1), NA_real_),
             literacy_average, composite_average
         )
     }
 ) %>%
+    left_join(readxl::read_excel("N:/ORP_accountability/data/2018_final_accountability_files/2017-18_E EDFacts School Master FIle_5-3-18.xls",
+                                           sheet = 2) %>% 
+              transmute(system = as.integer(`DG 4 LEA ID (State)`),
+                        system_name = `EXTRA ITEM - LEA Name`) %>% 
+              group_by(system) %>% 
+              summarize(system_name = first(system_name)) %>% 
+              ungroup(),
+              by = "system") %>%
     arrange(system, subgroup)
 
 write_csv(growth_standard_district, "N:/ORP_accountability/data/2018_ELPA/wida_growth_standard_district.csv", na = "")
