@@ -13,7 +13,8 @@ sta = F
 dis = F
 sch = F
 gr2 = F 
-elp = T
+elp = F
+rdg = T
 
 # Student level
 if(stu == T) {
@@ -285,4 +286,23 @@ if(elp == T) {
   #   select(system:subgroup, starts_with("literacy_average"), starts_with("composite_average"))
   
   # Specific cases
+}
+
+# Ready graduate
+if(rdg == T) {
+  setwd("N:/ORP_accountability/data/2018_final_accountability_files")
+  
+  # Student
+  jw = read_dta("ready_grad_student2018_JW.dta") 
+  
+  # #%>%
+  #   select(student_id = unique_student_id, system, school, ends_with("performancelevel"), starts_with("performancelevel"),
+  #          valid_tests, bhn, ed, swd, el = ell, hispanic = Hispanic, black = Black, native = raceamericanindianalaskannative,
+  #          hawaiian_pi = racepacificislanderhawaiian, asian = Asian, white = White) %>%
+  #   mutate_at(vars(native, hawaiian_pi), funs(as.numeric(. == "Y"))) %>%
+  #   mutate_at(vars(ed, bhn, swd), funs(ifelse(is.na(.), 0, .)))
+  # ap = read_csv("wida_growth_standard_student_level.csv", col_types = "ddcdccccdddddddddddddddddddddddddddddddddd") 
+   
+  # # Checks: performance
+  # check = full_join(rename(jw, prof_composite = performancelevelcomposite, prof_literacy = literacyperformancelevel),
 }
