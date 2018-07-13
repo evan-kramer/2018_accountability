@@ -254,11 +254,21 @@ state_output <- state_CA %>%
 write_csv(state_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/state_chronic_absenteeism.csv", na = "")
 
 student_output <- attendance %>%
-    transmute(system, system_name, school, school_name, student_id = student_key,
+  
+  
+  
+  # CJOIN INSDF
+  
+  
+  left_join(transmute(read_delim("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student file.txt", delim = "\t",
+                                 col_types = "ciiiiiccccccicccciiccccccciiiiii"),
+                      student_id = STUDENT_KEY, first_name = FIRST_NAME, middle_name = MIDDLE_NAME, last_name = LAST_NAME), 
+            by = "student_key") %>%
+  transmute(system, system_name, school, school_name, student_id = student_key, first_name, middle_name, last_name,
         n_absences, isp_days, instructional_calendar_days = instructional_days,
         absentee_rate = round5(100 * n_absences/isp_days, 1),
         Black, Hispanic, Native, HPI, Asian, White, ED, SWD, EL) %>%
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
-        funs(if_else(is.na(.), 0L, as.integer(.))))
+        funs(if_else(is.na(.), 0L, as.integer(.)))) 
 
 write_csv(student_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism.csv", na = "")

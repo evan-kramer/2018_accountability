@@ -214,6 +214,7 @@ growth_standard_district <- map_dfr(
               summarize(system_name = first(system_name)) %>% 
               ungroup(),
               by = "system") %>%
+    select(system, system_name, everything()) %>% 
     arrange(system, subgroup)
 
 write_csv(growth_standard_district, "N:/ORP_accountability/data/2018_ELPA/wida_growth_standard_district.csv", na = "")
