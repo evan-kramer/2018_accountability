@@ -267,4 +267,5 @@ student_output <- read_delim("N:/ORP_accountability/data/2018_chronic_absenteeis
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
         funs(if_else(is.na(.), 0L, as.integer(.)))) 
 
-write_csv(student_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism.csv", na = "")
+write_csv(as.data.frame(student_output), 
+          "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism.csv", na = "")
