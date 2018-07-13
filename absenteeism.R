@@ -1,4 +1,4 @@
-library(acct)
+# library(acct)
 library(tidyverse)
 
 instructional_days <- readxl::read_excel("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_SchoolFile.xls") %>%
@@ -213,7 +213,7 @@ school_output <- school_CA %>%
         n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(system, school, subgroup, grade_band)
 
-write_csv(school_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/school_chronic_absenteeism.csv", na = "")
+# write_csv(school_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/school_chronic_absenteeism.csv", na = "")
 
 system_output <- system_CA %>%
     transmute(year, system, system_name,
@@ -232,7 +232,7 @@ system_output <- system_CA %>%
         n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(system, subgroup, grade_band)
 
-write_csv(system_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/system_chronic_absenteeism.csv", na = "")
+# write_csv(system_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/system_chronic_absenteeism.csv", na = "")
 
 state_output <- state_CA %>%
     transmute(year, system = 0, system_name = "State of Tennessee",
@@ -251,22 +251,18 @@ state_output <- state_CA %>%
         n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(subgroup, grade_band)
 
-write_csv(state_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/state_chronic_absenteeism.csv", na = "")
+# write_csv(state_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/state_chronic_absenteeism.csv", na = "")
 
-student_output <- attendance %>%
-  
-  
-  
-  # CJOIN INSDF
-  
-  
-  left_join(transmute(read_delim("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student file.txt", delim = "\t",
-                                 col_types = "ciiiiiccccccicccciiccccccciiiiii"),
-                      student_id = STUDENT_KEY, first_name = FIRST_NAME, middle_name = MIDDLE_NAME, last_name = LAST_NAME), 
-            by = "student_key") %>%
+student_output <- read_delim("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student file.txt", delim = "\t",
+                             col_types = "ciiiiiccccccicccciiccccccciiiiii") %>% 
+  transmute(student_key = STUDENT_KEY, first_name = FIRST_NAME, middle_name = MIDDLE_NAME, last_name = LAST_NAME) %>% 
+  group_by(student_key) %>% 
+  summarize_at(vars(ends_with("_name")), funs(first(.))) %>%
+  ungroup() %>%
+  right_join(attendance, by = "student_key") %>%
   transmute(system, system_name, school, school_name, student_id = student_key, first_name, middle_name, last_name,
         n_absences, isp_days, instructional_calendar_days = instructional_days,
-        absentee_rate = round5(100 * n_absences/isp_days, 1),
+        absentee_rate = round(100 * n_absences/isp_days+1e-9, 1),
         Black, Hispanic, Native, HPI, Asian, White, ED, SWD, EL) %>%
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
         funs(if_else(is.na(.), 0L, as.integer(.)))) 
