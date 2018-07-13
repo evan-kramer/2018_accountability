@@ -293,16 +293,24 @@ if(rdg == T) {
   setwd("N:/ORP_accountability/data/2018_final_accountability_files")
   
   # Student
-  jw = read_dta("ready_grad_student2018_JW.dta") 
+  # jw = read_dta("ready_grad_student2018_JW.dta") %>% 
+  #   mutate_at(vars(student_key), funs(as.integer(.))) %>% 
+  #   mutate(ready_grad = n_21_orhigher)
+  # ap = ready_grad_student
   
-  # #%>%
-  #   select(student_id = unique_student_id, system, school, ends_with("performancelevel"), starts_with("performancelevel"),
-  #          valid_tests, bhn, ed, swd, el = ell, hispanic = Hispanic, black = Black, native = raceamericanindianalaskannative,
-  #          hawaiian_pi = racepacificislanderhawaiian, asian = Asian, white = White) %>%
-  #   mutate_at(vars(native, hawaiian_pi), funs(as.numeric(. == "Y"))) %>%
-  #   mutate_at(vars(ed, bhn, swd), funs(ifelse(is.na(.), 0, .)))
-  # ap = read_csv("wida_growth_standard_student_level.csv", col_types = "ddcdccccdddddddddddddddddddddddddddddddddd") 
-   
-  # # Checks: performance
-  # check = full_join(rename(jw, prof_composite = performancelevelcomposite, prof_literacy = literacyperformancelevel),
+  # School
+  # jw = read_dta("ready_grad_school2018_JW.dta") %>% 
+  #   transmute(system = as.integer(system), school = as.integer(school), grad_cohort = as.integer(grad_cohort),
+  #             ready_grad = as.integer(n_21_orhigher), subgroup, pct_ready_grad)
+  # ap = read_csv("school_ready_grad.csv")
+  # check = full_join(jw, ap, by = c("system", "school", "subgroup")) %>% 
+  #   filter(pct_ready_grad.x != pct_ready_grad.y | (is.na(pct_ready_grad.x) & !is.na(pct_ready_grad.y)) | (is.na(pct_ready_grad.y) & !is.na(pct_ready_grad.x))) 
+  
+  # District
+  # jw = read_dta("ready_grad_system2018_JW.dta") %>% 
+    # transmute(system = as.integer(system), grad_cohort = as.integer(grad_cohort),
+              # ready_grad = as.integer(n_21_orhigher), subgroup, pct_ready_grad)
+  # ap = read_csv("district_ready_grad.csv")
+  # check = full_join(jw, ap, by = c("system", "subgroup")) %>% 
+    # filter(pct_ready_grad.x != pct_ready_grad.y | (is.na(pct_ready_grad.x) & !is.na(pct_ready_grad.y)) | (is.na(pct_ready_grad.y) & !is.na(pct_ready_grad.x))) 
 }
