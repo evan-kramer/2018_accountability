@@ -12,9 +12,11 @@ stu = F
 sta = F
 dis = F
 sch = F
-gr2 = T 
+gr2 = F 
 elp = F
 rdg = F
+rel = T
+abs = F
 
 # Student level
 if(stu == T) {
@@ -345,4 +347,25 @@ if(rdg == T) {
   # ap = read_csv("district_ready_grad.csv")
   # check = full_join(jw, ap, by = c("system", "subgroup")) %>% 
     # filter(pct_ready_grad.x != pct_ready_grad.y | (is.na(pct_ready_grad.x) & !is.na(pct_ready_grad.y)) | (is.na(pct_ready_grad.y) & !is.na(pct_ready_grad.x))) 
+}
+
+# State release
+if(rel == T) {
+  check = full_join(read_csv("N:/ORP_accountability/data/2018_final_accountability_files/state_release_file2018.csv") %>% 
+                      mutate(subject = str_replace_all(subject, "HS ", "")),
+                    state_release, by = c("year", "system", "subject", "grade", "subgroup")) %>% 
+    filter(valid_tests.x != valid_tests.y | (is.na(valid_tests.x) & !is.na(valid_tests.y)) | (is.na(valid_tests.y) & !is.na(valid_tests.x))) %>%
+    select(year:subgroup, starts_with("valid_tests"))
+}
+
+# Missing absenteeism files
+if(abs == T) { 
+  a = data.frame(fl = list.files("N:/ORP_accountability/projects/NCLBAppeals/Accountability Web Files")) %>% 
+    filter(str_detect(fl, "Absenteeism") == T) %>% 
+    mutate(system = as.integer(str_replace_all(str_sub(fl, 1, 3), "_", ""))) %>% 
+    arrange(fl) %>% 
+    group_by(system) %>% 
+    summarize(n = n()) %>% 
+    ungroup() %>% 
+    filter(n < 3)
 }
