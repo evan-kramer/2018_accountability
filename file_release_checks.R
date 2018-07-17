@@ -15,7 +15,7 @@ sch = F
 gr2 = F 
 elp = F
 rdg = F
-rel = T
+rel = F
 abs = F
 
 # Student level
@@ -351,11 +351,28 @@ if(rdg == T) {
 
 # State release
 if(rel == T) {
-  jw = read_csv("N:/ORP_accountability/data/2018_final_accountability_files/state_release_assessmentfile2018_suppressed.csv")
-  ap = state_suppressed
+  setwd("N:/ORP_accountability/data/2018_final_accountability_files/")
+  jw = read_csv("state_release_file2018.csv")
+  ap = read_csv("state_release_file.csv")
   check = full_join(jw, ap, by = c("year", "system", "subject", "grade", "subgroup")) %>% 
-    filter(abs(pct_below.x - pct_below.y) > 0.1 | (is.na(pct_below.x) & !is.na(pct_below.y)) | (is.na(pct_below.y) & !is.na(pct_below.x))) %>%
+    filter(abs(pct_on_mastered.x - pct_on_mastered.y) > 0.1 | (is.na(pct_on_mastered.x) & !is.na(pct_on_mastered.y)) | (is.na(pct_on_mastered.y) & !is.na(pct_on_mastered.x))) %>%
     select(year:subgroup, starts_with("valid_tests"), starts_with("n_"), starts_with("pct_"))
+  
+  jw = read_csv("state_release_assessmentfile2018_suppressed.csv")
+  ap = read_csv("state_assessment_file_suppressed.csv")
+  # check = full_join(jw, ap, by = c("year", "system", "subject", "grade", "subgroup")) %>% 
+  #   filter(pct_on_mastered.x != pct_on_mastered.y | (is.na(pct_on_mastered.x) & !is.na(pct_on_mastered.y)) | (is.na(pct_on_mastered.y) & !is.na(pct_on_mastered.x))) %>%
+  #   select(year:subgroup, starts_with("valid_tests"), starts_with("n_"), starts_with("pct_"))
+  
+  jw = mutate_at(read_dta("system_release_file2018_JW.dta"), vars(year, system, starts_with("n_")), funs(as.numeric(.)))
+  ap = read_csv("district_release_file.csv")
+  check = full_join(jw, ap, by = c("year", "system", "subject", "grade", "subgroup")) %>% 
+    mutate_at(vars(starts_with("n_"), starts_with("pct_")), funs(as.character(.))) %>%
+    # filter(pct_below.x != pct_below.y | (is.na(pct_below.x) & !is.na(pct_below.y)) | (is.na(pct_below.y) & !is.na(pct_below.x))) %>%
+    filter(pct_approaching.x != pct_approaching.y | (is.na(pct_approaching.x) & !is.na(pct_approaching.y)) | (is.na(pct_approaching.y) & !is.na(pct_approaching.x))) %>%
+    select(year:subgroup, starts_with("valid_tests"), starts_with("n_below"), starts_with("n_approaching"),
+           starts_with("n_on_track"), starts_with("n_mastered"), starts_with("pct_below")) %>% 
+    filter(valid_tests.x != 0)
 }
 
 # Missing absenteeism files
