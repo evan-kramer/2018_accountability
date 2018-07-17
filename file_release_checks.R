@@ -351,11 +351,11 @@ if(rdg == T) {
 
 # State release
 if(rel == T) {
-  check = full_join(read_csv("N:/ORP_accountability/data/2018_final_accountability_files/state_release_file2018.csv") %>% 
-                      mutate(subject = str_replace_all(subject, "HS ", "")),
-                    state_release, by = c("year", "system", "subject", "grade", "subgroup")) %>% 
-    filter(valid_tests.x != valid_tests.y | (is.na(valid_tests.x) & !is.na(valid_tests.y)) | (is.na(valid_tests.y) & !is.na(valid_tests.x))) %>%
-    select(year:subgroup, starts_with("valid_tests"))
+  jw = read_csv("N:/ORP_accountability/data/2018_final_accountability_files/state_release_assessmentfile2018_suppressed.csv")
+  ap = state_suppressed
+  check = full_join(jw, ap, by = c("year", "system", "subject", "grade", "subgroup")) %>% 
+    filter(abs(pct_below.x - pct_below.y) > 0.1 | (is.na(pct_below.x) & !is.na(pct_below.y)) | (is.na(pct_below.y) & !is.na(pct_below.x))) %>%
+    select(year:subgroup, starts_with("valid_tests"), starts_with("n_"), starts_with("pct_"))
 }
 
 # Missing absenteeism files

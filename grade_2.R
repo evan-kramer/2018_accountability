@@ -180,16 +180,32 @@ if(sch == T) {
     select(year, system, school, subject, subgroup,
            enrolled, tested, valid_tests, n_below, n_approaching, n_on_track, n_mastered, 
            pct_below, pct_approaching, pct_on_track, pct_mastered, pct_on_mastered) %>% 
+    bind_rows(read_dta("N:/ORP_accountability/projects/2017_grade_2_assessment/school_level_2017_JW_final_10242017.dta") %>% 
+                select(year, system, school, subject, subgroup, enrolled:valid_tests, 
+                       n_below = n_below_bsc, n_approaching = n_approach_bsc, n_on_track = n_ontrack_prof, 
+                       n_mastered = n_mastered_adv, pct_below = pct_below_bsc, pct_approaching = pct_approach_bsc, 
+                       pct_on_track = pct_ontrack_prof, pct_mastered = pct_mastered_adv, pct_on_mastered = pct_ontrack_prof_adv) %>% 
+                mutate(subgroup = case_when(
+                  subgroup == "Native American" ~ "American Indian or Alaska Native",
+                  subgroup == "English Language Learners" ~ "English Learners",
+                  subgroup == "English Language Learners with T1/T2" ~ "English Learners with Transitional 1-4",
+                  subgroup == "Non-English Language Learners" ~ "Non-English Learners",
+                  subgroup == "Non-English Language Learners with T1/T2" ~ "Non-English Learners/Transitional 1-4",
+                  subgroup == "Black" ~ "Black or African American",
+                  subgroup == "Hawaiian or Pacific Islander" ~ "Native Hawaiian or Other Pacific Islander",
+                  T ~ subgroup
+                ))) %>% 
     left_join(readxl::read_excel("N:/ORP_accountability/data/2018_final_accountability_files/2017-18_E EDFacts School Master FIle_5-3-18.xls", sheet = 2) %>%
                 janitor::clean_names() %>%
                 transmute(
                   system = as.integer(dg_4_lea_id_state), system_name = extra_item_lea_name,
                   school = as.integer(dg_5_school_id_state), school_name = dg_7_school_name
                 ) %>%
-                distinct(), by = c("system", "school")) %>%
-    select(year, system, system_name, school, school_name, everything()) %>%
-    arrange(system, school, subject, subgroup) 
-  
+                distinct(),
+              by = c("system", "school")) %>% 
+    select(year, system, system_name, school, school_name, everything()) %>% 
+    arrange(system, school, desc(year), subgroup, subject) 
+    
   write_csv(school_assessment, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_school_level_file.csv", na = "")
 }
 
@@ -270,17 +286,30 @@ if(dis == T) {
              TRUE ~ subgroup
            )
     ) %>%
-    select(year, system, subject, subgroup,
-           enrolled, tested, valid_tests, n_below, n_approaching, n_on_track, n_mastered, 
-           pct_below, pct_approaching, pct_on_track, pct_mastered, pct_on_mastered) %>% 
+    bind_rows(read_dta("N:/ORP_accountability/projects/2017_grade_2_assessment/system_level_2017_JW_final_10242017.dta") %>% 
+                select(year, system, subject, subgroup, enrolled:valid_tests, 
+                       n_below = n_below_bsc, n_approaching = n_approach_bsc, n_on_track = n_ontrack_prof, 
+                       n_mastered = n_mastered_adv, pct_below = pct_below_bsc, pct_approaching = pct_approach_bsc, 
+                       pct_on_track = pct_ontrack_prof, pct_mastered = pct_mastered_adv, pct_on_mastered = pct_ontrack_prof_adv) %>% 
+                mutate(subgroup = case_when(
+                  subgroup == "Native American" ~ "American Indian or Alaska Native",
+                  subgroup == "English Language Learners" ~ "English Learners",
+                  subgroup == "English Language Learners with T1/T2" ~ "English Learners with Transitional 1-4",
+                  subgroup == "Non-English Language Learners" ~ "Non-English Learners",
+                  subgroup == "Non-English Language Learners with T1/T2" ~ "Non-English Learners/Transitional 1-4",
+                  subgroup == "Black" ~ "Black or African American",
+                  subgroup == "Hawaiian or Pacific Islander" ~ "Native Hawaiian or Other Pacific Islander",
+                  T ~ subgroup
+                ))) %>% 
     left_join(readxl::read_excel("N:/ORP_accountability/data/2018_final_accountability_files/2017-18_E EDFacts School Master FIle_5-3-18.xls", sheet = 2) %>%
                 janitor::clean_names() %>%
                 transmute(
                   system = as.integer(dg_4_lea_id_state), system_name = extra_item_lea_name
                 ) %>%
-                distinct(), by = "system") %>%
-    select(year, system, system_name, everything()) %>%
-    arrange(system, subject, subgroup) 
+                distinct(),
+              by = "system") %>% 
+    select(year, system, system_name, subject, subgroup, everything()) %>% 
+    arrange(system, desc(year), subgroup, subject) 
   
   write_csv(district_assessment, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_district_level_file.csv", na = "")
 }
