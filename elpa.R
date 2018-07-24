@@ -52,6 +52,8 @@ wida <- haven::read_dta("N:/Assessment_Data Returns/ACCESS for ELs and ALT/2017-
         prof_literacy = literacyproficiencylevel,
         prof_composite = compositeoverallproficiencylevel
     ) %>%
+    # Correct ID errors from Knox County
+    mutate(student_id = ifelse(student_id == 4447440 & first_name == "ZAMIRA", 4796016, student_id)) %>% 
     mutate_at(vars(starts_with("scale_score_"), starts_with("prof_")), as.numeric) %>%
     filter(!is.na(student_id), !is.na(scale_score_composite)) %>%
     group_by(student_id) %>%
