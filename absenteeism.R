@@ -29,7 +29,17 @@ if(data == T) {
     transmute(student_key, BHN = pmax(Black, Hispanic, Native), ED = ed, SWD = swd, EL = pmax(ell, t1t4),
               Hispanic, Black, Native, HPI, Asian, White)
   
-  attendance <- read_dta("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student_file.dta")   
+  attendance <- read_dta("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student_file.dta") %>% 
+    # Replace Grainger County records with updated data
+    filter(district_no != 290) %>% 
+    bind_rows(read_delim("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student file_Updated.txt", 
+                         delim = "\t") %>% 
+                clean_names() %>% 
+                transmute(instructional_program_num = as.numeric(instructional_program_num),
+                          district_no = as.numeric(district_no), school_no = as.numeric(school_no), 
+                          grade, student_key, begin_date, end_date, 
+                          isp_days = as.numeric(isp_days), cnt_total = as.numeric(cnt_total)) %>% 
+                filter(district_no == 290))
 } else {
   rm(data)
 }
@@ -230,7 +240,7 @@ if(summ == T) {
               n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(system, school, subgroup, grade_band)
   
-  # write_csv(school_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/school_chronic_absenteeism.csv", na = "")
+  write_csv(school_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/school_chronic_absenteeism.csv", na = "")
   
   system_output <- system_CA %>%
     transmute(year, system, system_name,
@@ -249,7 +259,7 @@ if(summ == T) {
               n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(system, subgroup, grade_band)
   
-  # write_csv(system_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/system_chronic_absenteeism.csv", na = "")
+  write_csv(system_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/system_chronic_absenteeism.csv", na = "")
   
   state_output <- state_CA %>%
     transmute(year, system = 0, system_name = "State of Tennessee",
@@ -268,7 +278,7 @@ if(summ == T) {
               n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(subgroup, grade_band)
   
-  # write_csv(state_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/state_chronic_absenteeism.csv", na = "")
+  write_csv(state_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/state_chronic_absenteeism.csv", na = "")
 } else {
   rm(summ)
 }
@@ -288,7 +298,7 @@ if(stud == T) {
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
               funs(if_else(is.na(.), 0L, as.integer(.)))) 
   
-  # write_csv(as.data.frame(student_output), "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism.csv", na = "")
+  write_csv(as.data.frame(student_output), "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism.csv", na = "")
 } else {
   rm(stud)
 }
