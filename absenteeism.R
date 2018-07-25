@@ -1,5 +1,6 @@
 # library(acct)
 library(tidyverse)
+library(janitor)
 library(haven) 
 
 # Switches
@@ -298,7 +299,7 @@ if(stud == T) {
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
               funs(if_else(is.na(.), 0L, as.integer(.)))) 
   
-  write_csv(as.data.frame(student_output), "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism.csv", na = "")
+  write_csv(as.data.frame(student_output), "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism_grainger_correction.csv", na = "")
 } else {
   rm(stud)
 }
