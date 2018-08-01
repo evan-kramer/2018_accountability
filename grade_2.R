@@ -5,9 +5,9 @@
 library(tidyverse)
 
 # Switches
-stu = F
-sch = F
-dis = F
+stu = T
+sch = T
+dis = T
 
 # Student 
 if(stu == T) {
@@ -97,7 +97,7 @@ if(stu == T) {
     mutate(performance_level = if_else(performance_level == "On track", "On Track", performance_level)) %>%
     arrange(system, school, state_student_id)
   
-  write_csv(output, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_student_level_file.csv", na = "")
+  # write_csv(output, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_student_level_file.csv", na = "")
 }
 
 # school
@@ -311,5 +311,5 @@ if(dis == T) {
     select(year, system, system_name, subject, subgroup, everything()) %>% 
     arrange(system, desc(year), subgroup, subject) 
   
-  write_csv(district_assessment, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_district_level_file.csv", na = "")
+  # write_csv(district_assessment, "N:/ORP_accountability/projects/2018_grade_2_assessment/2018_grade_2_district_level_file.csv", na = "")
 }
