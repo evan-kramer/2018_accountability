@@ -7,7 +7,7 @@ library(lubridate)
 data = F
 abst = F
 summ = F
-outp = T
+outp = F
 setwd("N:/ORP_accountability/data/2018_chronic_absenteeism")
 
 # Data 
@@ -281,51 +281,51 @@ if(summ == T) {
 if(outp == T) {
   # State
   level = "state"
-  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
-    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
-      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
-                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
-                overwrite = T)
-      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+  filedate = str_replace_all(
+    round_date(file.mtime(str_c(level, "_chronic_absenteeism.csv")), "day"), 
+    "-", "")
+  if(!is.na(filedate)) {
+    if(!dir.exists(str_c("Previous/", filedate))) {
+      dir.create(str_c("Previous/", filedate))
     }
-    write_csv(state_output, str_c("Previous/", 
-                                  str_replace_all(today(), "-", ""),
-                                  level, "_chronic_absenteeism.csv"), na = "")
-  } else {
-    write_csv(state_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+    file.copy(from = str_c(level, "_chronic_absenteeism.csv"),
+              to = str_c("Previous/", filedate, "/", level, "_chronic_absenteeism.csv"),
+              overwrite = T)
+    file.remove(str_c(level, "_chronic_absenteeism.csv"))
   }
+  write_csv(state_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
   
   # District
   level = "district"
-  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
-    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
-      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
-                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
-                overwrite = T)
-      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+  filedate = str_replace_all(
+    round_date(file.mtime(str_c(level, "_chronic_absenteeism.csv")), "day"), 
+    "-", "")
+  if(!is.na(filedate)) {
+    if(!dir.exists(str_c("Previous/", filedate))) {
+      dir.create(str_c("Previous/", filedate))
     }
-    write_csv(system_output, str_c("Previous/", 
-                                   str_replace_all(today(), "-", ""),
-                                   level, "_chronic_absenteeism.csv"), na = "")
-  } else {
-    write_csv(system_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+    file.copy(from = str_c(level, "_chronic_absenteeism.csv"),
+              to = str_c("Previous/", filedate, "/", level, "_chronic_absenteeism.csv"),
+              overwrite = T)
+    file.remove(str_c(level, "_chronic_absenteeism.csv"))
   }
+  write_csv(system_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
   
   # School
   level = "school"
-  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
-    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
-      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
-                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
-                overwrite = T)
-      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+  filedate = str_replace_all(
+    round_date(file.mtime(str_c(level, "_chronic_absenteeism.csv")), "day"), 
+    "-", "")
+  if(!is.na(filedate)) {
+    if(!dir.exists(str_c("Previous/", filedate))) {
+      dir.create(str_c("Previous/", filedate))
     }
-    write_csv(school_output, str_c("Previous/", 
-                                   str_replace_all(today(), "-", ""),
-                                   level, "_chronic_absenteeism.csv"), na = "")
-  } else {
-    write_csv(school_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+    file.copy(from = str_c(level, "_chronic_absenteeism.csv"),
+              to = str_c("Previous/", filedate, "/", level, "_chronic_absenteeism.csv"),
+              overwrite = T)
+    file.remove(str_c(level, "_chronic_absenteeism.csv"))
   }
+  write_csv(school_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
   
   # Student
   level = "student"
@@ -338,19 +338,19 @@ if(outp == T) {
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
               funs(if_else(is.na(.), 0L, as.integer(.)))) 
   
-  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
-    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
-      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
-                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
-                overwrite = T)
-      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+  filedate = str_replace_all(
+    round_date(file.mtime(str_c(level, "_chronic_absenteeism.csv")), "day"), 
+    "-", "")
+  if(!is.na(filedate)) {
+    if(!dir.exists(str_c("Previous/", filedate))) {
+      dir.create(str_c("Previous/", filedate))
     }
-    write_csv(student_output, str_c("Previous/", 
-                                    str_replace_all(today(), "-", ""),
-                                    level, "_chronic_absenteeism.csv"), na = "")
-  } else {
-    write_csv(student_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+    file.copy(from = str_c(level, "_chronic_absenteeism.csv"),
+              to = str_c("Previous/", filedate, "/", level, "_chronic_absenteeism.csv"),
+              overwrite = T)
+    file.remove(str_c(level, "_chronic_absenteeism.csv"))
   }
+  write_csv(as.data.frame(student_output), str_c(level, "_chronic_absenteeism.csv"), na = "")
   
   rm(level)
 } else {
