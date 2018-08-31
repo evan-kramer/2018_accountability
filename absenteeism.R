@@ -1,22 +1,23 @@
-# library(acct)
 library(tidyverse)
 library(janitor)
 library(haven) 
+library(lubridate)
 
 # Switches
-data = T
-abst = T
-summ = T
-stud = T
+data = F
+abst = F
+summ = F
+outp = T
+setwd("N:/ORP_accountability/data/2018_chronic_absenteeism")
 
 # Data 
 if(data == T) {
-  instructional_days <- readxl::read_excel("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_SchoolFile.xls") %>%
+  instructional_days <- readxl::read_excel("Instructional_Days_SchoolFile.xls") %>%
     transmute(year = 2018, system_name = DISTRICT_NAME, system = DISTRICT_NO,
               school_name = SCHOOL_NAME, school = SCHOOL_NO, instructional_days = INSTRUCTIONAL_DAYS)
   
   demographic <- read_delim("N:/Assessment_Data Returns/ACCESS for ELs and ALT/2017-18/Demographics_SY2017_18.txt", delim = "\t") %>%
-    janitor::clean_names() %>%
+    clean_names() %>%
     mutate(
       Hispanic = race == 4,
       Black = race == 3,
@@ -30,26 +31,23 @@ if(data == T) {
     transmute(student_key, BHN = pmax(Black, Hispanic, Native), ED = ed, SWD = swd, EL = pmax(ell, t1t4),
               Hispanic, Black, Native, HPI, Asian, White)
   
-  attendance <- read_dta("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student_file.dta") %>% 
-    # Replace Grainger County records with updated data
-    filter(district_no != 290) %>% 
-    bind_rows(read_delim("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student file_Updated.txt", 
-                         delim = "\t") %>% 
-                clean_names() %>% 
-                transmute(instructional_program_num = as.numeric(instructional_program_num),
-                          district_no = as.numeric(district_no), school_no = as.numeric(school_no), 
-                          grade, student_key, begin_date, end_date, 
-                          isp_days = as.numeric(isp_days), cnt_total = as.numeric(cnt_total)) %>% 
-                filter(district_no == 290))
+  attendance <- read_delim("Instructional_Days_Student file_08302018.txt", delim = "\t") %>% 
+    clean_names() %>% 
+    transmute(instructional_program_num = as.numeric(instructional_program_num),
+              district_no = as.numeric(district_no), school_no = as.numeric(school_no), 
+              grade, student_key, first_name, middle_name, last_name, begin_date, end_date, 
+              isp_days = as.numeric(isp_days), cnt_total = as.numeric(cnt_total)) 
 } else {
   rm(data)
 }
 
+# Absenteeism
 if(abst == T) {
-  absenteeism = janitor::clean_names(attendance) %>%
+  absenteeism = clean_names(attendance) %>%
     filter(grade %in% c("K", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")) %>%
     transmute(instructional_program_num, system = district_no, school = school_no, grade,
-              student_key = as.integer(student_key), begin_date, end_date, isp_days,
+              student_key = as.integer(student_key), first_name, middle_name, last_name,
+              begin_date, end_date, isp_days,
               count_total = if_else(is.na(cnt_total), 0, cnt_total)) %>%
     # For students with same system, school, student ID, enrollment dates, take maximum instructional program days
     # (Drops 0 records)
@@ -73,7 +71,8 @@ if(abst == T) {
     # Collapse multiple enrollments at the same school
     rename(n_absences = count_total) %>%
     group_by(system, school, grade, student_key) %>%
-    summarise_at(c("n_absences", "isp_days"), sum, na.rm = TRUE) %>%
+    summarize(first_name = first(first_name), middle_name = first(middle_name), last_name = first(last_name),
+              n_absences = sum(n_absences, na.rm = T), isp_days = sum(isp_days, na.rm = T)) %>%
     ungroup() %>%
     # Merge on instructional calendar file
     inner_join(instructional_days, by = c("system", "school")) %>%
@@ -241,8 +240,6 @@ if(summ == T) {
               n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(system, school, subgroup, grade_band)
   
-  write_csv(school_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/school_chronic_absenteeism.csv", na = "")
-  
   system_output <- system_CA %>%
     transmute(year, system, system_name,
               subgroup = case_when(
@@ -260,8 +257,6 @@ if(summ == T) {
               n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(system, subgroup, grade_band)
   
-  write_csv(system_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/system_chronic_absenteeism.csv", na = "")
-  
   state_output <- state_CA %>%
     transmute(year, system = 0, system_name = "State of Tennessee",
               subgroup = case_when(
@@ -278,20 +273,64 @@ if(summ == T) {
               grade_band = grade,
               n_students, n_chronically_absent, pct_chronically_absent) %>%
     arrange(subgroup, grade_band)
-  
-  write_csv(state_output, "N:/ORP_accountability/data/2018_chronic_absenteeism/state_chronic_absenteeism.csv", na = "")
 } else {
   rm(summ)
 }
 
-# Student output
-if(stud == T) {
-  student_output <- read_dta("N:/ORP_accountability/data/2018_chronic_absenteeism/Instructional_Days_Student_file.dta") %>% 
-    transmute(student_key, first_name, middle_name, last_name) %>% 
-    group_by(student_key) %>% 
-    summarize_at(vars(ends_with("_name")), funs(first(.))) %>%
-    ungroup() %>%
-    right_join(absenteeism, by = "student_key") %>%
+# State, district, school, and student output
+if(outp == T) {
+  # State
+  level = "state"
+  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
+    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
+      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
+                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
+                overwrite = T)
+      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+    }
+    write_csv(state_output, str_c("Previous/", 
+                                  str_replace_all(today(), "-", ""),
+                                  level, "_chronic_absenteeism.csv"), na = "")
+  } else {
+    write_csv(state_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+  }
+  
+  # District
+  level = "district"
+  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
+    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
+      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
+                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
+                overwrite = T)
+      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+    }
+    write_csv(system_output, str_c("Previous/", 
+                                   str_replace_all(today(), "-", ""),
+                                   level, "_chronic_absenteeism.csv"), na = "")
+  } else {
+    write_csv(system_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+  }
+  
+  # School
+  level = "school"
+  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
+    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
+      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
+                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
+                overwrite = T)
+      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+    }
+    write_csv(school_output, str_c("Previous/", 
+                                   str_replace_all(today(), "-", ""),
+                                   level, "_chronic_absenteeism.csv"), na = "")
+  } else {
+    write_csv(school_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+  }
+  
+  # Student
+  level = "student"
+  
+  student_output <- absenteeism %>%
     transmute(system, system_name, school, school_name, student_id = student_key, first_name, middle_name, last_name,
               n_absences, isp_days, instructional_calendar_days = instructional_days,
               absentee_rate = round(100 * n_absences/isp_days+1e-9, 1),
@@ -299,7 +338,21 @@ if(stud == T) {
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
               funs(if_else(is.na(.), 0L, as.integer(.)))) 
   
-  write_csv(as.data.frame(student_output), "N:/ORP_accountability/data/2018_chronic_absenteeism/student_chronic_absenteeism_grainger_correction.csv", na = "")
+  if(str_c(level, "_chronic_absenteeism.csv") %in% list.files()) {
+    if(str_replace_all(today(), "-", "") %in% list.files("Previous")) {
+      file.copy(from = str_c(level, "_chronic_absenteeism.csv"), 
+                to = str_c("Previous/", str_replace_all(today(), "-", ""), "/", level, "_chronic_absenteeism.csv"),
+                overwrite = T)
+      file.remove(str_c(level, "_chronic_absenteeism.csv"))
+    }
+    write_csv(student_output, str_c("Previous/", 
+                                    str_replace_all(today(), "-", ""),
+                                    level, "_chronic_absenteeism.csv"), na = "")
+  } else {
+    write_csv(student_output, str_c(level, "_chronic_absenteeism.csv"), na = "")
+  }
+  
+  rm(level)
 } else {
-  rm(stud)
+  rm(outp)
 }
