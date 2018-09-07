@@ -7,7 +7,7 @@ library(lubridate)
 data = F
 abst = F
 summ = F
-outp = T
+outp = F
 setwd("N:/ORP_accountability/data/2018_chronic_absenteeism")
 
 # Data 
