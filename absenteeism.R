@@ -7,7 +7,7 @@ library(lubridate)
 data = F
 abst = F
 summ = F
-outp = F
+outp = T
 setwd("N:/ORP_accountability/data/2018_chronic_absenteeism")
 
 # Data 
@@ -31,7 +31,7 @@ if(data == T) {
     transmute(student_key, BHN = pmax(Black, Hispanic, Native), ED = ed, SWD = swd, EL = pmax(ell, t1t4),
               Hispanic, Black, Native, HPI, Asian, White)
   
-  attendance <- read_delim("Instructional_Days_Student file_08302018.txt", delim = "\t") %>% 
+  attendance <- read_dta("instructional_days_student_file.dta") %>% 
     clean_names() %>% 
     transmute(instructional_program_num = as.numeric(instructional_program_num),
               district_no = as.numeric(district_no), school_no = as.numeric(school_no), 
