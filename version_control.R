@@ -2,6 +2,10 @@
 # 9/13/2018
 # Evan Kramer
 
+library(tidyverse)
+library(lubridate)
+setwd("N:/ORP_accountability")
+
 path = "N:/ORP_accountability/data/2018_graduation_rate/"
 for(f in c("state", "district", "school")) {
   file = str_c(f, "_grad_rate.csv")
