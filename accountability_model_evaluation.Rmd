@@ -1,0 +1,59 @@
+```{r setup, include = F, warning = F, message = F}
+options(java.parameters = "-Xmx16G")
+library(tidyverse)
+library(lubridate)
+library(haven)
+library(RJDBC)
+library(knitr)
+library(rmarkdown)
+setwd("N:/ORP_accountability")
+
+# Load accountability results
+s = read_csv("projects/2018_school_accountability/school_grading_grades.csv")
+m = read_csv("projects/2018_school_accountability/school_grading_metrics.csv")
+d = read_csv("data/2018_final_accountability_files/2018_district_accountability_file_JW.csv")
+
+```
+
+---
+title: "Accountability Model Evaluation"
+author: "Assessment, Accountability, and Data Governance"
+date: `r str_c(month(today(), label = T, abbr = T), ". ", day(today()), ", ", year(today()))`
+output: html_document
+---
+***
+#### Document Overview
+This document evaluates the `r ifelse(between(month(today()), 1, 4), year(today()) - 1, year(today()))` accountability methodology and results. 
+
+The model followed four guiding principles:
+* All schools should have the opportunity to earn a high score.
+    + Poverty is not destiny.
+* All means all.
+    + Each indicator should be reported for historically underserved student groups.
+* All growth should be rewarded.
+    + Schools with low achievement but high growth will be recognized.
+    + Incremental growth will be recognized.
+* Reporting should be transparent.
+    + The public should be able to access and review multiple indicators.
+
+
+```{r, echo = F, warning = F, message = F}
+# 
+
+
+```
+
+***
+ 
+#### __Model 1__: Bottom 5% of Overall Average, Multiple Years of Data
+
+```{r, echo = F, include = F}
+# file.copy(from = str_c("N:/ORP_accountability/projects/Evan/Accountability/Analysis/Output/Evaluation/", 
+#                        year(today()) + 1, "_school_modeling.html"),
+#           to = str_c("N:/ORP_accountability/projects/", 
+#                      year(today()) + 1, 
+#                      "_school_modeling/Output/", 
+#                      str_replace_all(today(), "-", ""),
+#                      "_school_modeling_notes.html"),
+#           overwrite = T)
+```

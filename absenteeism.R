@@ -6,8 +6,9 @@ library(lubridate)
 # Switches
 data = F
 abst = F
-summ = F
+summ = T
 outp = F
+supp = F
 setwd("N:/ORP_accountability/data/2018_chronic_absenteeism")
 
 # Data 
@@ -331,8 +332,7 @@ if(outp == T) {
   level = "student"
   
   student_output <- absenteeism %>%
-    transmute(system, system_name, school, school_name, student_id = student_key, first_name, middle_name, last_name,
-              n_absences, isp_days, instructional_calendar_days = instructional_days,
+    transmute(system, system_name, school, school_name, student_id = student_key, first_name, middle_name, last_name,               n_absences, isp_days, instructional_calendar_days = instructional_days,
               absentee_rate = round(100 * n_absences/isp_days+1e-9, 1),
               Black, Hispanic, Native, HPI, Asian, White, ED, SWD, EL) %>%
     mutate_at(c("Black", "Hispanic", "Native", "HPI", "Asian", "White", "ED", "SWD", "EL"),
@@ -355,4 +355,27 @@ if(outp == T) {
   rm(level)
 } else {
   rm(outp)
+}
+
+# Suppress
+if(supp == T) {
+  for(s in c("state", "district", "school")) {
+    if(s == "school") {
+      col_types = "ddcdcccddd"; val1 = .05; val2 = .95
+    } else {
+      col_types = "ddcccddd"; val1 = .01; val2 = .99
+    }
+    
+    read_csv(str_c(s, "_chronic_absenteeism.csv"), col_types = col_types) %>%
+      mutate(pct_chronically_absent = ifelse(between(n_chronically_absent / n_students, val1, val2),
+                                             as.character(pct_chronically_absent), "**"),
+             n_chronically_absent = ifelse(between(n_chronically_absent / n_students, val1, val2),
+                                           as.character(n_chronically_absent), "**")) %>% 
+      mutate_at(vars(ends_with("_absent")), funs(ifelse(n_students < 10, "*", .))) %>% 
+      write_csv(str_c("chr_abs_", str_to_title(s), "-Level_Suppression_2017-18.csv"), na = "") 
+  }
+
+  rm(s, col_types, val1, val2)
+} else {
+  rm(supp)
 }
